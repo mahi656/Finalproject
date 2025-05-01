@@ -1,0 +1,37 @@
+:root {
+  /* Colors */
+  --bg-dark: #000000;
+  --text-primary: #ffffff;
+  --primary-teal: #00c9b7;
+  --primary-coral: #ff6b6b;
+  --primary-gold: #ffd700;
+  --background-color: #000000;
+  --modal-background: #000000;
+  --card-background: #000000;
+  
+  /* Transitions */
+  --transition-normal: 0.3s;
+  
+  /* Border Radius */
+  --radius-full: 999px;
+  --radius-medium: 8px;
+}
+
+/* Global Styles */
+html, body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--background-color);
+}
+
+body {
+  min-height: 100vh;
+  color: var(--text-primary);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background-color: var(--background-color);
+}
+
+#root {
+  background-color: var(--background-color);
+  min-height: 100vh;
+} 

@@ -1,0 +1,10 @@
+.dot {
+    width: 6px;
+    height: 6px;
+    background: gold;
+    border-radius: 50%;
+    position: absolute;
+    pointer-events: none;
+    z-index: 9999;
+  }
+  

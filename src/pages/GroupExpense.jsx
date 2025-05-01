@@ -1,37 +1,55 @@
-import React, { useState } from 'react';
-import './GroupExpense.css';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import '../styles/GroupExpense.css';
 
 const GroupDetailsModal = ({ group, onClose }) => {
-  const [splitAmount, setSplitAmount] = useState('0.00');
-  const [memberAmounts, setMemberAmounts] = useState(
-    group.members.map(() => parseFloat(group.amount))
-  );
+  const [memberAmounts, setMemberAmounts] = useState(() => {
+    if (!group?.members?.length || !group?.amount) return [0];
+    const amount = parseFloat(group.amount) / group.members.length;
+    return group.members.map(() => isNaN(amount) ? 0 : amount);
+  });
   const [showCalculator, setShowCalculator] = useState(null);
 
   const handleCalculation = (index, operation, value) => {
+    if (!value || isNaN(parseFloat(value))) return;
+    
     const amounts = [...memberAmounts];
     const currentAmount = amounts[index];
+    let newAmount = currentAmount;
     
-    switch(operation) {
-      case 'add':
-        amounts[index] = currentAmount + parseFloat(value);
-        break;
-      case 'subtract':
-        amounts[index] = currentAmount - parseFloat(value);
-        break;
-      case 'multiply':
-        amounts[index] = currentAmount * parseFloat(value);
-        break;
-      case 'divide':
-        amounts[index] = currentAmount / parseFloat(value);
-        break;
-      case 'discount':
-        amounts[index] = currentAmount * (1 - parseFloat(value) / 100);
-        break;
-      default:
-        break;
+    try {
+      switch(operation) {
+        case 'add':
+          newAmount = currentAmount + parseFloat(value);
+          break;
+        case 'subtract':
+          newAmount = currentAmount - parseFloat(value);
+          break;
+        case 'multiply':
+          newAmount = currentAmount * parseFloat(value);
+          break;
+        case 'divide':
+          if (parseFloat(value) === 0) throw new Error('Cannot divide by zero');
+          newAmount = currentAmount / parseFloat(value);
+          break;
+        case 'discount':
+          newAmount = currentAmount * (1 - (parseFloat(value) / 100));
+          break;
+        case 'reset':
+          const originalAmount = parseFloat(group?.amount || 0) / (group?.members?.length || 1);
+          newAmount = isNaN(originalAmount) ? 0 : originalAmount;
+          break;
+        default:
+          break;
+      }
+      
+      if (!isNaN(newAmount)) {
+        amounts[index] = newAmount;
+        setMemberAmounts(amounts);
+      }
+    } catch (error) {
+      console.error('Calculation error:', error);
     }
-    setMemberAmounts(amounts);
   };
 
   return (
@@ -39,61 +57,61 @@ const GroupDetailsModal = ({ group, onClose }) => {
       <div className="modal-content group-details-modal">
         <div className="group-header">
           <div className="group-title">
-            <span className="group-icon">{group.icon}</span>
+            <span className="group-icon">
+              <img 
+                src="https://cdn-icons-png.flaticon.com/128/8566/8566659.png"
+                alt="Group"
+                className="group-icon-image"
+              />
+            </span>
             <h2>{group.groupName}</h2>
           </div>
-          <button className="close-button" onClick={onClose}>×</button>
+          <button className="close-button" onClick={onClose}>✕</button>
         </div>
 
         <div className="group-info">
           <p><strong>Purpose:</strong> {group.purpose}</p>
-          <p><strong>Total Amount:</strong> £{group.amount}</p>
+          <p><strong>Total Amount:</strong> {group.currency || '₹'}{parseFloat(group.amount).toFixed(2)}</p>
           <p><strong>Paid by:</strong> {group.paidBy}</p>
-          <p><strong>Date:</strong> {group.date} | {group.time}</p>
-          <p><strong>Description:</strong> {group.description}</p>
+          <p><strong>Date:</strong> {group.date || 'N/A'} {group.time ? `| ${group.time}` : ''}</p>
+          <p><strong>Description:</strong> {group.description || 'No description'}</p>
         </div>
 
         <div className="split-section">
           <h3>Split Amount (per person)</h3>
           <div className="split-calculator">
             <input
-              type="number"
-              value={splitAmount}
-              onChange={(e) => setSplitAmount(e.target.value)}
+              type="text"
+              value={(parseFloat(group?.amount || 0) / (group?.members?.length || 1)).toFixed(2)}
               className="input"
               readOnly
             />
-            <div className="calculator-buttons">
-              <button onClick={() => {
-                const equalSplit = (parseFloat(group.amount) / group.members.length).toFixed(2);
-                setSplitAmount(equalSplit);
-                setMemberAmounts(group.members.map(() => parseFloat(equalSplit)));
-              }}>
-                Split Equally
-              </button>
-            </div>
           </div>
         </div>
 
         <div className="members-list">
-          <h3>Members</h3>
           {group.members.map((member, index) => (
             <div key={index} className="member-split-item">
               <div className="member-info">
-                <span className="member-avatar">{member.avatar}</span>
-                {/* Member details with conditional owe color */}
+                <span className="member-avatar">
+                  <img 
+                    src="https://cdn-icons-png.flaticon.com/128/17531/17531058.png" 
+                    alt="Member"
+                    className="member-avatar-image"
+                  />
+                </span>
                 <div className="member-details">
                   <span className="member-name">{member.name}</span>
                   <span
                     className="member-owe"
-                    style={{ color: member.owe === 'Paid' ? '#4CAF50' : '#FF9800' }}
+                    style={{ color: member.owe === group.paidBy ? '#4CAF50' : '#FF9800' }}
                   >
-                    {member.owe}
+                    {member.owe === group.paidBy ? 'Paid' : 'Owes'}
                   </span>
                 </div>
               </div>
               <div className="member-amount-section">
-                <span className="member-amount">£{memberAmounts[index].toFixed(2)}</span>
+                <span className="member-amount">{group.currency || '₹'}{memberAmounts[index].toFixed(2)}</span>
                 <button
                   className="edit-amount-button"
                   onClick={() => setShowCalculator(showCalculator === index ? null : index)}
@@ -116,12 +134,21 @@ const GroupDetailsModal = ({ group, onClose }) => {
                         <option value="multiply">Multiply (×)</option>
                         <option value="divide">Divide (÷)</option>
                         <option value="discount">Discount (%)</option>
+                        <option value="reset">Remove Changes</option>
                       </select>
                       <button
                         onClick={() => {
                           const value = document.getElementById(`calc-value-${index}`).value;
                           const operation = document.getElementById(`calc-operation-${index}`).value;
-                          handleCalculation(index, operation, value);
+                          if (operation === 'reset') {
+                            // Reset to original split amount
+                            const amounts = [...memberAmounts];
+                            const originalAmount = parseFloat(group?.amount || 0) / (group?.members?.length || 1);
+                            amounts[index] = isNaN(originalAmount) ? 0 : originalAmount;
+                            setMemberAmounts(amounts);
+                          } else {
+                            handleCalculation(index, operation, value);
+                          }
                         }}
                       >
                         Apply
@@ -139,6 +166,8 @@ const GroupDetailsModal = ({ group, onClose }) => {
 };
 
 const GroupExpense = () => {
+  const navigate = useNavigate();
+  const [currency, setCurrency] = useState('₹');
   const [expenseData, setExpenseData] = useState({
     purpose: '',
     groupTotal: '',
@@ -148,7 +177,6 @@ const GroupExpense = () => {
     time: '',
     description: '',
   });
-
   const [showAddMemberModal, setShowAddMemberModal] = useState(false);
   const [memberName, setMemberName] = useState('');
   const [payerName, setPayerName] = useState('');
@@ -161,6 +189,8 @@ const GroupExpense = () => {
     icon: '👥',
     paidBy: ''
   });
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [personToDelete, setPersonToDelete] = useState(null);
 
   const updateGroupProfile = (newName, newIcon, newPaidBy) => {
     setGroupProfile({
@@ -168,32 +198,6 @@ const GroupExpense = () => {
       icon: newIcon || groupProfile.icon,
       paidBy: newPaidBy !== undefined ? newPaidBy : groupProfile.paidBy
     });
-  };
-
-  const handleGotIt = () => {
-    setShowSuccessModal(false);
-    setTransactions(prev => [...prev, {
-      groupName: groupProfile.name,
-      icon: groupProfile.icon,
-      purpose: expenseData.purpose,
-      amount: expenseData.groupTotal,
-      date: expenseData.date,
-      time: expenseData.time,
-      members: expenseData.splitWith,
-      description: expenseData.description,
-      paidBy: groupProfile.paidBy
-    }]);
-    setExpenseData({
-      purpose: '',
-      groupTotal: '',
-      memberCount: 0,
-      splitWith: [],
-      date: '',
-      time: '',
-      description: '',
-    });
-    setPayerName('');
-    updateGroupProfile('Default Group', '👥', '');
   };
 
   const handleAddMember = () => {
@@ -212,15 +216,106 @@ const GroupExpense = () => {
     }
   };
 
+  const handleRemovePerson = (index) => {
+    setPersonToDelete(index);
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = () => {
+    if (personToDelete !== null) {
+      setExpenseData(prev => ({
+        ...prev,
+        splitWith: prev.splitWith.filter((_, i) => i !== personToDelete),
+        memberCount: prev.splitWith.length - 1
+      }));
+      setShowDeleteConfirm(false);
+      setPersonToDelete(null);
+    }
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!expenseData.memberCount || expenseData.memberCount <= 0) {
-      alert('Number of members must be greater than 0');
+    if (!expenseData.groupTotal || !expenseData.purpose) {
+      alert('Please enter a purpose and total amount');
       return;
     }
+    
+    if (!expenseData.splitWith.length) {
+      alert('Please add at least one member');
+      return;
+    }
+    
     updateGroupProfile(expenseData.purpose, null, payerName);
     setShowSuccessModal(true);
   };
+
+  const handleGotIt = () => {
+    setShowSuccessModal(false);
+    setTransactions(prev => [...prev, {
+      groupName: expenseData.purpose || groupProfile.name,
+      icon: groupProfile.icon,
+      purpose: expenseData.purpose,
+      amount: expenseData.groupTotal,
+      currency: currency,
+      date: expenseData.date,
+      time: expenseData.time,
+      members: expenseData.splitWith,
+      description: expenseData.description,
+      paidBy: payerName
+    }]);
+    
+    // Reset form
+    setExpenseData({
+      purpose: '',
+      groupTotal: '',
+      memberCount: 0,
+      splitWith: [],
+      date: '',
+      time: '',
+      description: '',
+    });
+    setPayerName('');
+    updateGroupProfile('Default Group', '👥', '');
+  };
+
+  useEffect(() => {
+    const title = document.querySelector('.header-title');
+    const cursor = document.querySelector('.cursor');
+
+    const animateit = function (e) {
+      const span = this.querySelector('span');
+      const { offsetX: x, offsetY: y } = e;
+      const { offsetWidth: width, offsetHeight: height } = this;
+
+      const move = 25;
+      const xMove = (x / width * (move * 2)) - move;
+      const yMove = (y / height * (move * 2)) - move;
+
+      span.style.transform = `translate(${xMove}px, ${yMove}px)`;
+
+      if (e.type === 'mouseleave') span.style.transform = '';
+    };
+
+    const editCursor = e => {
+      const { clientX: x, clientY: y } = e;
+      cursor.style.left = x + 'px';
+      cursor.style.top = y + 'px';
+    };
+
+    if (title && cursor) {
+      title.addEventListener('mousemove', animateit);
+      title.addEventListener('mouseleave', animateit);
+      window.addEventListener('mousemove', editCursor);
+    }
+
+    return () => {
+      if (title && cursor) {
+        title.removeEventListener('mousemove', animateit);
+        title.removeEventListener('mouseleave', animateit);
+        window.removeEventListener('mousemove', editCursor);
+      }
+    };
+  }, []);
 
   return (
     <div className="container">
@@ -228,10 +323,6 @@ const GroupExpense = () => {
         <div className="modal">
           <div className="modal-content">
             <div className="success-icon">✓</div>
-            <span className="sparkle-1">✦</span>
-            <span className="sparkle-2">✦</span>
-            <span className="sparkle-3">✦</span>
-            <span className="sparkle-4">✦</span>
             <h2>Group expense added!</h2>
             <p>Your group has been notified and splits are processing.</p>
             <button className="got-it-button" onClick={handleGotIt}>Got it</button>
@@ -240,8 +331,13 @@ const GroupExpense = () => {
       ) : (
         <>
           <div className="header">
-            <button className="back-button">←</button>
-            <h1 className="header-title">Create Group Expense</h1>
+            <button className="back-button" onClick={() => navigate("/")}>←</button>
+            <div className="nav-wrapper">
+              <h1 className="header-title">
+                <span>Create Group Expense</span>
+              </h1>
+              <div className="cursor"></div>
+            </div>
           </div>
 
           <form className="form" onSubmit={handleSubmit}>
@@ -260,31 +356,30 @@ const GroupExpense = () => {
 
                 <div className="form-group">
                   <label className="label">Group total expense</label>
-                  <input
-                    className="input"
-                    type="number"
-                    value={expenseData.groupTotal}
-                    onChange={(e) => setExpenseData({...expenseData, groupTotal: e.target.value})}
-                    placeholder="£0.00"
-                    step="any"
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label className="label">Number of members</label>
-                  <input
-                    className="input"
-                    type="number"
-                    min="1"
-                    value={expenseData.memberCount}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      if (parseInt(value) > 0 || value === '') {
-                        setExpenseData({...expenseData, memberCount: parseInt(value) || 0});
-                      }
-                    }}
-                    placeholder="Enter"
-                  />
+                  <div className="expense-input-container">
+                    <select 
+                      className="currency-select"
+                      value={currency}
+                      onChange={(e) => setCurrency(e.target.value)}
+                    >
+                      <option value="₹">₹ (INR)</option>
+                      <option value="£">£ (GBP)</option>
+                      <option value="$">$ (USD)</option>
+                      <option value="€">€ (EUR)</option>
+                      <option value="¥">¥ (JPY)</option>
+                      <option value="A$">A$ (AUD)</option>
+                      <option value="C$">C$ (CAD)</option>
+                      <option value="CHF">CHF (Swiss Franc)</option>
+                      <option value="CNY">CNY (Chinese Yuan)</option>
+                    </select>
+                    <input
+                      className="input"
+                      type="text"
+                      value={expenseData.groupTotal}
+                      onChange={(e) => setExpenseData({...expenseData, groupTotal: e.target.value})}
+                      placeholder="0.00"
+                    />
+                  </div>
                 </div>
 
                 <div className="form-group">
@@ -295,23 +390,23 @@ const GroupExpense = () => {
                         <div key={index} className="member-item">
                           <div className="member-content">
                             <div className="member-avatar-wrapper">
-                              <div className="member-avatar">{member.avatar}</div>
+                              <div className="member-avatar">
+                                <img 
+                                  src="https://cdn-icons-png.flaticon.com/128/17531/17531058.png" 
+                                  alt="Member"
+                                  className="member-avatar-image"
+                                />
+                              </div>
                               <button
                                 type="button"
                                 className="remove-member"
-                                onClick={() => {
-                                  setExpenseData(prev => ({
-                                    ...prev,
-                                    splitWith: prev.splitWith.filter((_, i) => i !== index),
-                                    memberCount: prev.splitWith.length - 1
-                                  }));
-                                }}
+                                onClick={() => handleRemovePerson(index)}
                               >
                                 -
                               </button>
                             </div>
                             <span className="member-name">{member.name}</span>
-                            <span className="member-owe">{member.owe}</span>
+                            <span className="member-owe">{member.owe === payerName ? 'Paid' : 'Owes'}</span>
                           </div>
                         </div>
                       ))}
@@ -340,7 +435,7 @@ const GroupExpense = () => {
 
               <div className="right-column">
                 <div className="date-time-container">
-                  <div className="form-group" style={{ flex: 1, marginRight: '10px' }}>
+                  <div className="form-group">
                     <label className="label">Date</label>
                     <input
                       className="input"
@@ -350,7 +445,7 @@ const GroupExpense = () => {
                     />
                   </div>
 
-                  <div className="form-group" style={{ flex: 1 }}>
+                  <div className="form-group">
                     <label className="label">Time</label>
                     <input
                       className="input"
@@ -363,9 +458,8 @@ const GroupExpense = () => {
 
                 <div className="form-group">
                   <label className="label">Description</label>
-                  <input
+                  <textarea
                     className="input"
-                    type="text"
                     value={expenseData.description}
                     onChange={(e) => setExpenseData({...expenseData, description: e.target.value})}
                     placeholder="Add a description"
@@ -393,18 +487,27 @@ const GroupExpense = () => {
                   }}
                 >
                   <div className="transaction-icon-container">
-                    <span className="transaction-icon">{transaction.icon}</span>
+                    <img 
+                      src="https://cdn-icons-png.flaticon.com/128/11631/11631005.png"
+                      alt="Transaction"
+                      className="transaction-icon"
+                    />
                   </div>
                   <div className="transaction-details">
                     <h3>{transaction.groupName}</h3>
-                    <p>{transaction.date} | {transaction.time}</p>
+                    <p>{transaction.date || "N/A"} {transaction.time ? `| ${transaction.time}` : ""}</p>
                     <p><strong>Paid by:</strong> {transaction.paidBy}</p>
                   </div>
                   <div className="transaction-amount">
-                    £{parseFloat(transaction.amount).toFixed(2)}
+                    {transaction.currency || '₹'}{parseFloat(transaction.amount).toFixed(2)}
                   </div>
                 </div>
               ))}
+              {transactions.length === 0 && (
+                <p style={{ textAlign: "center", color: "#888" }}>
+                  No transactions available
+                </p>
+              )}
             </div>
           </div>
         </>
@@ -438,6 +541,23 @@ const GroupExpense = () => {
           group={selectedGroup}
           onClose={() => setShowGroupDetails(false)}
         />
+      )}
+
+      {showDeleteConfirm && (
+        <div className="modal">
+          <div className="modal-content">
+            <h2>Confirm Removal</h2>
+            <p>Are you sure you want to remove this member?</p>
+            <div className="modal-buttons">
+              <button className="cancel-button" onClick={() => setShowDeleteConfirm(false)}>
+                Cancel
+              </button>
+              <button className="delete-button" onClick={confirmDelete}>
+                <img src="https://cdn-icons-png.flaticon.com/128/5692/5692367.png" alt="Remove" style={{width: "30px", height:"30px"}}/>
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
