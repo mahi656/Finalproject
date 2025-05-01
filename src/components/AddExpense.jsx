@@ -3,12 +3,12 @@ import './AddExpense.css';
 
 const AddExpense = () => {
   const [expenseData, setExpenseData] = useState({
+    purpose: '',
     title: '',
     date: '',
     time: '',
     amount: '',
-    description: '',  
-    participants: []
+    description: ''
   });
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
@@ -20,14 +20,12 @@ const AddExpense = () => {
 
   const handleGotIt = () => {
     setShowSuccessModal(false);
-    // Reset form
     setExpenseData({
       title: '',
       date: '',
       time: '',
       amount: '',
-      description: '',
-      participants: []
+      description: ''
     });
   };
 
@@ -108,14 +106,7 @@ const AddExpense = () => {
                 placeholder="Add a description"
               />
             </div>
-
-            <div className="form-group">
-              <label className="label">Split Money with</label>
-              <div className="participants-container">
-                <button className="add-participant-button">+</button>
-              </div>
-            </div>
-
+            
             <button className="submit-button" type="submit">ADD</button>
           </form>
         </>

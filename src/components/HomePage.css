@@ -1,0 +1,52 @@
+.home-container {
+  min-height: 100vh;
+  background-color: #1a1a1a;
+  padding-top: 40px;
+}
+
+.app-header {
+  padding: 20px;
+  margin-bottom: 30px;
+}
+
+.app-title {
+  color: #00ff9d;
+  font-size: 36px;
+  margin-bottom: 30px;
+  font-weight: bold;
+  letter-spacing: 2px;
+}
+
+.tabs {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.tab {
+  padding: 15px 30px;
+  border: none;
+  border-radius: 8px;
+  background-color: #2a2a2a;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  flex: 1;
+}
+
+.tab:hover {
+  background-color: #333;
+}
+
+.tab.active {
+  background-color: #00ff9d;
+  color: black;
+  font-weight: bold;
+}
+
+.content {
+  margin-top: 20px;
+}
