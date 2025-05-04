@@ -1,10 +1,33 @@
 .dot {
-    width: 6px;
-    height: 6px;
+    width: 10px;
+    height: 10px;
     background: gold;
     border-radius: 50%;
-    position: absolute;
+    position: fixed;
+    left: 0;
+    top: 0;
     pointer-events: none;
     z-index: 9999;
-  }
+    mix-blend-mode: difference;
+    transition: background 0.2s;
+}
+
+.home-container {
+    min-height: 100vh;
+    background: #000;
+    color: #fff;
+    position: relative;
+    overflow: hidden;
+    cursor: none !important;
+}
+
+.content {
+    position: relative;
+    z-index: 1;
+}
+
+/* Ensure cursor is visible on other pages */
+body:not(.home-container) {
+    cursor: default !important;
+}
   

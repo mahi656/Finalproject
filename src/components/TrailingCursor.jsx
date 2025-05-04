@@ -18,10 +18,7 @@ const TrailingCursor = () => {
       let y = coords.y;
 
       dotsRef.current.forEach((dot, index) => {
-        if (!dot) return;
-        
         const nextDot = dotsRef.current[index + 1] || dotsRef.current[0];
-        if (!nextDot) return;
 
         dot.style.left = x + "px";
         dot.style.top = y + "px";

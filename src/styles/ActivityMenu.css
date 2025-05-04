@@ -1,0 +1,30 @@
+.activity-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background-color: #222222;
+  border-radius: 8px;
+  padding: 8px;
+  min-width: 200px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  color: #ffffff;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.menu-item:hover {
+  background-color: #333333;
+}
+
+.menu-icon {
+  font-size: 20px;
+}

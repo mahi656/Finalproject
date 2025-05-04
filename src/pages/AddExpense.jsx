@@ -231,11 +231,11 @@ const AddExpense = () => {
                 >
                   <div 
                     className="transaction-content"
-                    onClick={() => {
-                      setSelectedExpense(transaction);
-                      setShowExpenseDetails(true);
-                    }}
-                  >
+                  onClick={() => {
+                    setSelectedExpense(transaction);
+                    setShowExpenseDetails(true);
+                  }}
+                >
                     <div className="transaction-icon-container">
                       <img 
                         src="https://cdn-icons-png.flaticon.com/128/6553/6553062.png"
@@ -243,19 +243,19 @@ const AddExpense = () => {
                         className="transaction-icon"
                       />
                     </div>
-                    <div className="transaction-details">
-                      <h3>{transaction.purpose}</h3>
-                      <p>
-                        {transaction.date || "N/A"} {transaction.time ? `| ${transaction.time}` : ""}
-                      </p>
-                      <p>
-                        <strong>Paid by:</strong> {transaction.paidBy || "You"}
-                      </p>
-                    </div>
-                    <div className="transaction-amount">
-                      {transaction.currency}
-                      {Number.parseFloat(transaction.amount).toFixed(2)}
-                    </div>
+                  <div className="transaction-details">
+                    <h3>{transaction.purpose}</h3>
+                    <p>
+                      {transaction.date || "N/A"} {transaction.time ? `| ${transaction.time}` : ""}
+                    </p>
+                    <p>
+                      <strong>Paid by:</strong> {transaction.paidBy || "You"}
+                    </p>
+                  </div>
+                  <div className="transaction-amount">
+                    {transaction.currency}
+                    {Number.parseFloat(transaction.amount).toFixed(2)}
+                  </div>
                   </div>
                   <button 
                     className="delete-button"

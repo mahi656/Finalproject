@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaHeart, FaUsers, FaSignOutAlt } from "react-icons/fa";
+import TrailingCursor from '../components/TrailingCursor';
 import '../styles/HomePage.css';
 
 const HomePage = () => {
@@ -30,6 +31,7 @@ const HomePage = () => {
 
   return (
     <div className="page-wrapper">
+      <TrailingCursor />
       <div className="home-container">
         <div className="nav-container">
           <div className="nav-wrapper">

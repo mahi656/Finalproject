@@ -147,7 +147,7 @@ const GroupDetailsModal = ({ group, onClose }) => {
                             amounts[index] = isNaN(originalAmount) ? 0 : originalAmount;
                             setMemberAmounts(amounts);
                           } else {
-                            handleCalculation(index, operation, value);
+                          handleCalculation(index, operation, value);
                           }
                         }}
                       >
