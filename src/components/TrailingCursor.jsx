@@ -23,6 +23,10 @@ const TrailingCursor = () => {
         dot.style.left = x + "px";
         dot.style.top = y + "px";
 
+        // Calculate opacity based on position in the trail
+        const opacity = 1 - (index / dotsRef.current.length) * 0.9;
+        dot.style.opacity = opacity;
+
         const dx = nextDot.offsetLeft - dot.offsetLeft;
         const dy = nextDot.offsetTop - dot.offsetTop;
 
@@ -47,6 +51,7 @@ const TrailingCursor = () => {
           key={i}
           ref={(el) => (dotsRef.current[i] = el)}
           className="dot"
+          style={{ opacity: 0 }} 
         ></div>
       ))}
     </>
